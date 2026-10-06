@@ -1,5 +1,10 @@
 import { defaultMessageReducer, useEveAgent } from "eve/react";
-import { useState, type KeyboardEvent, type SyntheticEvent } from "react";
+import {
+  useEffect,
+  useState,
+  type KeyboardEvent,
+  type SyntheticEvent,
+} from "react";
 import { Button } from "@/src/components/design-system/Button/Button";
 import { Textarea } from "@/src/components/ui/textarea";
 import { cn } from "@/src/utils/tailwind";
@@ -19,6 +24,8 @@ type AgentChatProps = {
  * An ended session (past the agent's session timeout, or reset) still replays,
  * but eve refuses new messages with `session_not_active`.
  */
+const CATCH_UP_MS = 5_000;
+
 const isEnded = (error: Error | undefined) =>
   error !== undefined &&
   "code" in error &&
@@ -31,7 +38,7 @@ export function AgentChat(props: AgentChatProps) {
         resume: true,
       }
     : {};
-  const { data, status, error, send } = useEveAgent({
+  const { data, status, error, send, resume, session } = useEveAgent({
     host: agentChatHost(props.projectId, props.agentId),
     reducer: defaultMessageReducer(),
     ...resumed,
@@ -41,6 +48,18 @@ export function AgentChat(props: AgentChatProps) {
     },
   });
   const [draft, setDraft] = useState("");
+  const sessionId = session?.sessionId;
+
+  // A background task (a remote sub-agent's verdict) starts its own turn after
+  // the one that launched it has settled, when nothing is following the stream.
+  // While idle, catch up now and then so that turn shows up live.
+  useEffect(() => {
+    if (status !== "ready" || !sessionId) return;
+    const timer = setInterval(() => {
+      resume().catch(() => undefined);
+    }, CATCH_UP_MS);
+    return () => clearInterval(timer);
+  }, [status, sessionId, resume]);
   const ended = isEnded(error);
   const busy = status !== "ready" && status !== "error";
 
