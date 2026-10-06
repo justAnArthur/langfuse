@@ -37,6 +37,7 @@ import { usePostHogClientCapture } from "@/src/features/posthog-analytics";
 import { CloudStatusMenu } from "@/src/features/cloud-status-notification/components/CloudStatusMenu";
 import { type ProductModule } from "@/src/ee/features/ui-customization/productModuleSchema";
 import { matchesPathname } from "@/src/components/layouts/app-layout/utils/pathClassification";
+import { agentRoutes } from "@/src/features/agents/routes";
 
 export enum RouteSection {
   Main = "main",
@@ -119,6 +120,7 @@ export const ROUTES: Route[] = [
     productModule: "dashboards",
     section: RouteSection.Main,
   },
+  ...agentRoutes(RouteSection.Main),
   {
     title: "Tracing",
     icon: ListTree,
