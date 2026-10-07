@@ -12,9 +12,11 @@ history of those chats. Everything else is upstream, unchanged.
 | `web/src/app/api/agents-proxy/**` | `GET` agent list; the eve proxy |
 | `web/src/pages/project/[projectId]/agents/**` | One-line page re-exports |
 | `web/src/__tests__/server/unit/agentProxyHandler.servertest.ts` | Proxy contract |
+| `web/src/__tests__/server/unit/invitedSignup.servertest.ts` | Invite-only sign-up |
 | `.github/workflows/ja-publish-web.yml` | Image build on `ja/*` tags |
 | `web/src/components/layouts/routes.tsx` | **Upstream file:** one import, one `...agentRoutes(...)` line |
 | `web/package.json`, `pnpm-lock.yaml` | **Upstream files:** the `eve` dependency |
+| `web/src/features/auth-credentials/server/signupApiHandler.ts`, `web/src/server/auth.ts` | **Upstream files:** the sign-up-disabled check calls `signupClosedFor(email)` |
 
 ## How it works
 
@@ -29,6 +31,10 @@ history of those chats. Everything else is upstream, unchanged.
   (`initialSession` + `resume`), which also follows a turn still running.
 - An agent ends a session after its timeout. The chat then shows the
   conversation read-only with a "New chat" button.
+- Sign-up stays closed (`AUTH_DISABLE_SIGNUP`), except for an email with a
+  pending invitation: creating that account is what accepts the invite.
+  Without SMTP the invite email is skipped, so send the invitee
+  `/auth/sign-up` yourself.
 
 ## Configuration (langfuse-web only)
 
@@ -42,8 +48,9 @@ history of those chats. Everything else is upstream, unchanged.
 ## Upgrading upstream
 
 1. `git fetch upstream --tags && git rebase --onto vX.Y.Z vOLD just-agents`
-2. Conflicts land in `routes.tsx` (re-add the two lines), `web/package.json`
-   and `pnpm-lock.yaml` (take upstream's, then `pnpm --filter web add eve@<version>`).
-3. `pnpm --filter web exec tsc --noEmit`, the proxy test, a local `pnpm dev`.
+2. Conflicts land in `routes.tsx` (re-add the two lines), the two sign-up
+   checks (call `signupClosedFor` again), `web/package.json` and
+   `pnpm-lock.yaml` (take upstream's, then `pnpm --filter web add eve@<version>`).
+3. `pnpm --filter web exec tsc --noEmit`, the two unit tests, a local `pnpm dev`.
 4. Tag `ja/X.Y.Z-ja.1`, push, and set `LANGFUSE_VERSION=X.Y.Z` and
    `LANGFUSE_WEB_TAG=X.Y.Z-ja.1` together in just-agents' Dokploy env.

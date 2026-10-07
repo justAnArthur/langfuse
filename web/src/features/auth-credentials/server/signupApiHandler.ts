@@ -7,6 +7,7 @@ import { getSsoAuthProviderIdForDomain } from "@/src/ee/features/multi-tenant-ss
 import type { NextApiRequest, NextApiResponse } from "next";
 import { logger } from "@langfuse/shared/src/server";
 import { isEmailVerificationRequired } from "@/src/features/auth-credentials/lib/credentialsUtils";
+import { signupClosedFor } from "@/src/features/agents/server/invitedSignup";
 
 export function getSSOBlockedDomains() {
   return (
@@ -25,11 +26,8 @@ export async function validateSignupEligibility({
 }: {
   email: string;
 }): Promise<string | null> {
-  // Block if disabled by env
-  if (
-    env.NEXT_PUBLIC_SIGN_UP_DISABLED === "true" ||
-    env.AUTH_DISABLE_SIGNUP === "true"
-  ) {
+  // Block if disabled by env, unless the email was invited (just-agents)
+  if (await signupClosedFor(email)) {
     return "Sign up is disabled.";
   }
   if (env.AUTH_DISABLE_USERNAME_PASSWORD === "true") {

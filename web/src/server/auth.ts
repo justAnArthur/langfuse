@@ -19,6 +19,7 @@ import {
 import { isGatewayEnabledForOrganization } from "@/src/features/ai-gateway/server/availability";
 import { env } from "@/src/env.mjs";
 import { createProjectMembershipsOnSignup } from "@/src/features/auth/lib/createProjectMembershipsOnSignup";
+import { signupClosedFor } from "@/src/features/agents/server/invitedSignup";
 import { getSessionLoginAt } from "@/src/features/auth/lib/sessionExpiration";
 import { type AdClickIds } from "@/src/features/auth/lib/signupAttribution";
 import {
@@ -625,10 +626,7 @@ const createExtendedPrismaAdapter = (signupAttribution?: {
   async createUser(profile: Omit<AdapterUser, "id">) {
     if (!prismaAdapter.createUser)
       throw new Error("createUser not implemented");
-    if (
-      env.NEXT_PUBLIC_SIGN_UP_DISABLED === "true" ||
-      env.AUTH_DISABLE_SIGNUP === "true"
-    ) {
+    if (await signupClosedFor(profile.email)) {
       throw new Error("Sign up is disabled.");
     }
     if (!profile.email) {
