@@ -1,5 +1,10 @@
-import { defaultMessageReducer, useEveAgent } from "eve/react";
 import {
+  defaultMessageReducer,
+  openConversationInputs,
+  useEveAgent,
+} from "eve/react";
+import {
+  Fragment,
   useEffect,
   useState,
   type KeyboardEvent,
@@ -9,6 +14,11 @@ import { Button } from "@/src/components/design-system/Button/Button";
 import { Textarea } from "@/src/components/ui/textarea";
 import { cn } from "@/src/utils/tailwind";
 import { agentChatHost } from "../agentPaths";
+import {
+  ApprovalCard,
+  pickApprovalRequest,
+  type ApprovalResponse,
+} from "./ApprovalCard";
 import { ChatPart, isRenderedPart } from "./ChatPart";
 
 type AgentChatProps = {
@@ -38,15 +48,16 @@ export function AgentChat(props: AgentChatProps) {
         resume: true,
       }
     : {};
-  const { data, status, error, send, resume, session } = useEveAgent({
-    host: agentChatHost(props.projectId, props.agentId),
-    reducer: defaultMessageReducer(),
-    ...resumed,
-    onSessionChange: (session) => {
-      if (!props.sessionId && session)
-        props.onSessionStarted?.(session.sessionId);
-    },
-  });
+  const { data, conversation, status, error, send, respond, resume, session } =
+    useEveAgent({
+      host: agentChatHost(props.projectId, props.agentId),
+      reducer: defaultMessageReducer(),
+      ...resumed,
+      onSessionChange: (session) => {
+        if (!props.sessionId && session)
+          props.onSessionStarted?.(session.sessionId);
+      },
+    });
   const [draft, setDraft] = useState("");
   const sessionId = session?.sessionId;
 
@@ -62,6 +73,12 @@ export function AgentChat(props: AgentChatProps) {
   }, [status, sessionId, resume]);
   const ended = isEnded(error);
   const busy = status !== "ready" && status !== "error";
+  // A turn parked on an approval stays open, so the composer stays disabled.
+  const awaitingApproval = openConversationInputs(conversation).some(
+    (input) => input.request.kind === "tool-approval",
+  );
+  // eve keeps the input ledger in `conversation` whatever the data reducer.
+  const answerApproval = (response: ApprovalResponse) => respond([response]);
 
   // A failed send lands in `error` through the store; the promise adds nothing.
   const submit = () => {
@@ -100,9 +117,23 @@ export function AgentChat(props: AgentChatProps) {
             <span className="text-muted-foreground text-xs">
               {message.role === "user" ? "you" : props.agentId}
             </span>
-            {message.parts.filter(isRenderedPart).map((part, index) => (
-              <ChatPart key={`${message.id}-${index}`} part={part} />
-            ))}
+            {message.parts.filter(isRenderedPart).map((part, index) => {
+              const request = pickApprovalRequest(part);
+              return (
+                <Fragment key={`${message.id}-${index}`}>
+                  <ChatPart part={part} />
+                  {request && part.type === "dynamic-tool" ? (
+                    <ApprovalCard
+                      part={part}
+                      request={request}
+                      entry={conversation.inputs[request.requestId]}
+                      disabled={status === "resuming" || ended}
+                      onRespond={answerApproval}
+                    />
+                  ) : null}
+                </Fragment>
+              );
+            })}
           </li>
         ))}
       </ul>
@@ -124,7 +155,13 @@ export function AgentChat(props: AgentChatProps) {
             onChange={(event) => setDraft(event.target.value)}
             onKeyDown={onKeyDown}
             disabled={busy}
-            placeholder={busy ? "The agent is working…" : "Message the agent"}
+            placeholder={
+              awaitingApproval
+                ? "The agent waits for your approval above"
+                : busy
+                  ? "The agent is working…"
+                  : "Message the agent"
+            }
             className="min-h-10 flex-1 resize-none"
             rows={2}
           />

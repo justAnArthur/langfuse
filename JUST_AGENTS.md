@@ -8,7 +8,7 @@ history of those chats. Everything else is upstream, unchanged.
 
 | Path | Purpose |
 | --- | --- |
-| `web/src/features/agents/**` | Pages, chat UI, agent registry, proxy |
+| `web/src/features/agents/**` | Pages, chat UI (with tool approvals), agent registry, proxy |
 | `web/src/app/api/agents-proxy/**` | `GET` agent list; the eve proxy |
 | `web/src/pages/project/[projectId]/agents/**` | One-line page re-exports |
 | `web/src/__tests__/server/unit/agentProxyHandler.servertest.ts` | Proxy contract |
@@ -30,6 +30,10 @@ history of those chats. Everything else is upstream, unchanged.
   records the email as the Langfuse user. The history list is Langfuse's own
   sessions query filtered on that tag; opening one replays it from the agent
   (`initialSession` + `resume`), which also follows a turn still running.
+- A tool call gated by eve's `approval` shows an approval card under its
+  tool chip (`ApprovalCard.tsx`). Approve or Deny (with an optional note the
+  model reads) goes back through the same proxy route as a message, as
+  `inputResponses`; the card then shows the decision from eve's input ledger.
 - An agent ends a session after its timeout. The chat then shows the
   conversation read-only with a "New chat" button.
 - Sign-up stays closed (`AUTH_DISABLE_SIGNUP`), except for an email with a
