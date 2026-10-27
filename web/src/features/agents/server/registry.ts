@@ -20,10 +20,29 @@ const parseRegistry = (raw: string | undefined): AgentEntry[] => {
   return z.array(AgentEntry).parse(JSON.parse(raw));
 };
 
+/** `JUST_AGENTS_ENABLED` (the deployment's compose profiles) keeps the agents it
+ *  runs; unset keeps every entry, so a registry can list agents an org has off. */
+export const enabledAgents = (
+  agents: AgentEntry[],
+  enabled: string | undefined,
+): AgentEntry[] => {
+  const ids = (enabled ?? "")
+    .split(",")
+    .map((id) => id.trim())
+    .filter(Boolean);
+  if (ids.length === 0) return agents;
+  return agents.filter((agent) => ids.includes(agent.id));
+};
+
 let cached: AgentEntry[] | undefined;
 
 export const listAgents = (): AgentEntry[] => {
-  if (cached === undefined) cached = parseRegistry(process.env.JUST_AGENTS);
+  if (cached === undefined) {
+    cached = enabledAgents(
+      parseRegistry(process.env.JUST_AGENTS),
+      process.env.JUST_AGENTS_ENABLED,
+    );
+  }
   return cached;
 };
 

@@ -12,6 +12,7 @@ history of those chats. Everything else is upstream, unchanged.
 | `web/src/app/api/agents-proxy/**` | `GET` agent list; the eve proxy |
 | `web/src/pages/project/[projectId]/agents/**` | One-line page re-exports |
 | `web/src/__tests__/server/unit/agentProxyHandler.servertest.ts` | Proxy contract |
+| `web/src/__tests__/server/unit/agentRegistry.servertest.ts` | Enabled agents filter |
 | `web/src/__tests__/server/unit/invitedSignup.servertest.ts` | Invite-only sign-up |
 | `.github/workflows/ja-publish-web.yml` | Image build on `ja/*` tags |
 | `web/src/components/layouts/routes.tsx` | **Upstream file:** one import, one `...agentRoutes(...)` line |
@@ -42,6 +43,7 @@ history of those chats. Everything else is upstream, unchanged.
 | --- | --- |
 | `JUST_AGENTS` | `[{"id":"foreman","label":"Foreman","url":"http://agent-foreman:4274"}]` |
 | `WEB_CHAT_TOKEN` | the same value every agent has |
+| `JUST_AGENTS_ENABLED` | `foreman,surveyor`: the ids this deployment runs (just-agents passes its `COMPOSE_PROFILES`); unset lists every entry |
 
 `id` must equal the id the agent passes to agent-lib's `langfuse(...)`.
 
