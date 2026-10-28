@@ -100,6 +100,12 @@ const send = (method: "PUT" | "POST", body: unknown): RequestInit => ({
 // the most hr serves in one page, so a pending proposal or an old rule is not cut off
 const WHOLE_PLAYBOOK = "limit=500";
 
+// every page shows these errors inline; the app's global handler would toast
+// and report each one (a deployment without a hub 503s on every visit), and
+// retrying a 403 or 503 only delays the message
+const inline = { retry: false, meta: { silentAllErrors: true } } as const;
+const ownError = () => {};
+
 const hubKey = (projectId: string, ...rest: unknown[]) => [
   "just-agents-hub",
   projectId,
@@ -108,9 +114,9 @@ const hubKey = (projectId: string, ...rest: unknown[]) => [
 
 export const useHubMe = (projectId: string) =>
   useQuery({
+    ...inline,
     queryKey: hubKey(projectId, "me"),
     enabled: Boolean(projectId),
-    retry: false,
     queryFn: () => getJson<HubMe>(hubApiUrl(projectId, "me")),
   });
 
@@ -119,9 +125,9 @@ export const useIsHubOwner = (projectId: string) =>
 
 export const useHubAgents = (projectId: string) =>
   useQuery({
+    ...inline,
     queryKey: hubKey(projectId, "agents"),
     enabled: Boolean(projectId),
-    retry: false,
     queryFn: async () =>
       (await getJson<{ agents: HubAgent[] }>(hubApiUrl(projectId, "agents")))
         .agents,
@@ -132,6 +138,7 @@ const playbookUrl = (projectId: string, agentId: string) =>
 
 export const usePlaybook = (projectId: string, agentId: string) =>
   useQuery({
+    ...inline,
     queryKey: hubKey(projectId, "playbook", agentId),
     enabled: Boolean(projectId && agentId),
     queryFn: () => getJson<Playbook>(playbookUrl(projectId, agentId)),
@@ -140,8 +147,8 @@ export const usePlaybook = (projectId: string, agentId: string) =>
 export const usePendingCounts = (projectId: string, agentIds: string[]) =>
   useQueries({
     queries: agentIds.map((agentId) => ({
+      ...inline,
       queryKey: hubKey(projectId, "playbook", agentId),
-      retry: false,
       queryFn: () => getJson<Playbook>(playbookUrl(projectId, agentId)),
       select: (playbook: Playbook) =>
         playbook.proposals.filter((p) => p.status === "pending").length,
@@ -150,6 +157,7 @@ export const usePendingCounts = (projectId: string, agentIds: string[]) =>
 
 export const useMemoryList = (projectId: string, agentId: string) =>
   useQuery({
+    ...inline,
     queryKey: hubKey(projectId, "memory-list", agentId),
     enabled: Boolean(projectId && agentId),
     queryFn: async () =>
@@ -165,14 +173,17 @@ const memoryUrl = (projectId: string, key: string) =>
 
 export const useMemoryDocument = (projectId: string, key: string) =>
   useQuery({
+    ...inline,
     queryKey: hubKey(projectId, "memory", key),
+    // an owner may be mid-edit; the editor keeps its base version either way
+    refetchOnWindowFocus: false,
     enabled: Boolean(projectId && key),
-    retry: false,
     queryFn: () => getJson<MemoryDocument>(memoryUrl(projectId, key)),
   });
 
 export const useSkills = (projectId: string, agentId: string) =>
   useQuery({
+    ...inline,
     queryKey: ["just-agents-info", projectId, agentId],
     enabled: Boolean(projectId && agentId),
     queryFn: async () =>
@@ -186,12 +197,12 @@ export const useSkills = (projectId: string, agentId: string) =>
 export function useSaveMemory(projectId: string, key: string) {
   const queryClient = useQueryClient();
   return useMutation({
+    onError: ownError,
     mutationFn: (write: { content: string; expectedVersion: string | null }) =>
       getJson<{ version: string }>(
         memoryUrl(projectId, key),
         send("PUT", write),
       ),
-    // not on a conflict: refetching would remount the editor over the unsaved draft
     onSuccess: () =>
       queryClient.invalidateQueries({ queryKey: hubKey(projectId) }),
   });
@@ -200,6 +211,7 @@ export function useSaveMemory(projectId: string, key: string) {
 export function useDecideProposal(projectId: string) {
   const queryClient = useQueryClient();
   return useMutation({
+    onError: ownError,
     mutationFn: ({
       id,
       ...decision
@@ -220,6 +232,7 @@ export function useDecideProposal(projectId: string) {
 export function useRetireRule(projectId: string, agentId: string) {
   const queryClient = useQueryClient();
   return useMutation({
+    onError: ownError,
     mutationFn: ({ id, why }: { id: number; why: string }) =>
       getJson(
         hubApiUrl(projectId, `agents/${agentId}/playbook/${id}/retire`),

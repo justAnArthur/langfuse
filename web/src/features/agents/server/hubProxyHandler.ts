@@ -12,7 +12,7 @@ const KEY = "(?!\\.\\.?$)[^/]+";
 const ROUTES: { pattern: RegExp; methods: string[] }[] = [
   { pattern: /^hub\/v1\/(me|agents)$/, methods: ["GET"] },
   {
-    pattern: new RegExp(`^hub/v1/agents/${AGENT}/(memory|playbook|traces)$`),
+    pattern: new RegExp(`^hub/v1/agents/${AGENT}/(memory|playbook)$`),
     methods: ["GET"],
   },
   {

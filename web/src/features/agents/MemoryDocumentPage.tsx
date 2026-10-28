@@ -42,7 +42,7 @@ export default function MemoryDocumentPage() {
           </header>
           {owner ? (
             <MemoryEditor
-              key={doc.data.version}
+              key={doc.data.key}
               projectId={projectId}
               doc={doc.data}
             />
@@ -58,7 +58,10 @@ export default function MemoryDocumentPage() {
   );
 }
 
-/** Remounted per version, so a save or a reload starts from what hr now holds. */
+/**
+ * The draft and the version it was based on survive a refetch, so the agent
+ * writing meanwhile never replaces the draft and the save gets hr's 409.
+ */
 const MemoryEditor = ({
   projectId,
   doc,
@@ -66,7 +69,11 @@ const MemoryEditor = ({
   projectId: string;
   doc: MemoryDocument;
 }) => {
-  const [draft, setDraft] = useState(doc.body ?? "");
+  const [base, setBase] = useState({
+    version: doc.version,
+    body: doc.body ?? "",
+  });
+  const [draft, setDraft] = useState(base.body);
   const save = useSaveMemory(projectId, doc.key);
   const conflict = save.error instanceof HubError && save.error.status === 409;
 
@@ -81,9 +88,14 @@ const MemoryEditor = ({
         <Button
           text="Save"
           loading={save.isPending}
-          disabled={draft === (doc.body ?? "")}
+          disabled={draft === base.body}
           onClick={() =>
-            save.mutate({ content: draft, expectedVersion: doc.version })
+            save.mutate(
+              { content: draft, expectedVersion: base.version },
+              {
+                onSuccess: ({ version }) => setBase({ version, body: draft }),
+              },
+            )
           }
         />
         {save.error ? (

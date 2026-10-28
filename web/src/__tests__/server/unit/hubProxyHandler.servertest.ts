@@ -135,6 +135,10 @@ describe("hub proxy", () => {
   it.each([
     ["a route outside the hub's pages", ["hub", "v1", "agents", "foreman"]],
     [
+      "the traces route, which the pages link to Langfuse for",
+      ["hub", "v1", "agents", "foreman", "traces"],
+    ],
+    [
       "an agent id outside the registry's form",
       ["hub", "v1", "agents", "../x", "memory"],
     ],
