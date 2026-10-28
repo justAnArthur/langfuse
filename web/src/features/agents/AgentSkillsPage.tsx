@@ -38,7 +38,7 @@ export default function AgentSkillsPage() {
     .map((name) => ({ name }));
 
   return (
-    <AgentHubPage tab="skills" withPadding>
+    <AgentHubPage tab="skills">
       <div className="flex flex-col gap-6">
         {hubStatus(skills, "This agent has no skills.")}
         {hubStatus(playbook)}

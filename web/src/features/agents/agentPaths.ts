@@ -38,6 +38,9 @@ export const agentMemoryUrl = (
 ) =>
   `/project/${projectId}/agents/${agentId}/memory${key ? `/${encodeURIComponent(key)}` : ""}`;
 
+export const agentOverviewUrl = (projectId: string, agentId: string) =>
+  `/project/${projectId}/agents/${agentId}/overview`;
+
 export const agentSkillsUrl = (projectId: string, agentId: string) =>
   `/project/${projectId}/agents/${agentId}/skills`;
 

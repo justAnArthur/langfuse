@@ -37,6 +37,7 @@ export default function AgentPage() {
   return (
     <AgentHubPage
       tab="chat"
+      fill
       actions={
         sessionId ? (
           <>

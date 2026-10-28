@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import Page from "@/src/components/layouts/page";
 import {
   agentMemoryUrl,
+  agentOverviewUrl,
   agentPageUrl,
   agentProposalsUrl,
   agentSkillsUrl,
@@ -10,12 +11,13 @@ import {
 } from "../agentPaths";
 import { useAgents } from "../useAgents";
 
-export type AgentTab = "chat" | "memory" | "skills" | "proposals";
+export type AgentTab = "chat" | "overview" | "memory" | "skills" | "proposals";
 
 type AgentHubPageProps = {
   tab: AgentTab;
   actions?: ReactNode;
-  withPadding?: boolean;
+  /** The chat fills the viewport and scrolls its own panes; every other page scrolls as a whole. */
+  fill?: boolean;
   children: ReactNode;
 };
 
@@ -23,7 +25,7 @@ type AgentHubPageProps = {
 export const AgentHubPage = ({
   tab,
   actions,
-  withPadding,
+  fill = false,
   children,
 }: AgentHubPageProps) => {
   const router = useRouter();
@@ -35,6 +37,11 @@ export const AgentHubPage = ({
 
   const tabs = [
     { value: "chat", label: "Chat", href: agentPageUrl(projectId, agentId) },
+    {
+      value: "overview",
+      label: "Overview",
+      href: agentOverviewUrl(projectId, agentId),
+    },
     {
       value: "memory",
       label: "Memory",
@@ -60,7 +67,8 @@ export const AgentHubPage = ({
 
   return (
     <Page
-      withPadding={withPadding}
+      withPadding={!fill}
+      scrollable={!fill}
       headerProps={{
         title: label ?? agentId ?? "Agent",
         breadcrumb: [{ name: "Agents", href: `/project/${projectId}/agents` }],
