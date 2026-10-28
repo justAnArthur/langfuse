@@ -7,19 +7,19 @@ proposals and health. Everything else is upstream, unchanged.
 
 ## What the fork adds
 
-| Path                                                                                     | Purpose                                                                       |
-| ---------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------- |
-| `web/src/features/agents/**`                                                             | Pages, chat UI (with tool approvals), agent registry, proxy                   |
-| `web/src/app/api/agents-proxy/**`                                                        | `GET` agent list; the eve proxy                                               |
-| `web/src/app/api/hub-proxy/**`                                                           | The hub proxy to hr's `hub/v1` API                                            |
-| `web/src/pages/project/[projectId]/agents/**`                                            | One-line page re-exports                                                      |
-| `web/src/__tests__/server/unit/agentProxyHandler.servertest.ts`                          | Proxy contract                                                                |
-| `web/src/__tests__/server/unit/hubProxyHandler.servertest.ts`                            | Hub proxy contract                                                            |
-| `web/src/__tests__/server/unit/agentRegistry.servertest.ts`                              | Enabled agents filter                                                         |
-| `web/src/__tests__/server/unit/invitedSignup.servertest.ts`                              | Invite-only sign-up                                                           |
-| `.github/workflows/ja-publish-web.yml`                                                   | Image build on `ja/*` tags                                                    |
-| `web/src/components/layouts/routes.tsx`                                                  | **Upstream file:** one import, one `...agentRoutes(...)` line                 |
-| `web/package.json`, `pnpm-lock.yaml`                                                     | **Upstream files:** the `eve` dependency                                      |
+| Path | Purpose |
+| --- | --- |
+| `web/src/features/agents/**` | Pages, chat UI (with tool approvals), agent registry, proxy |
+| `web/src/app/api/agents-proxy/**` | `GET` agent list; the eve proxy |
+| `web/src/app/api/hub-proxy/**` | The hub proxy to hr's `hub/v1` API |
+| `web/src/pages/project/[projectId]/agents/**` | One-line page re-exports |
+| `web/src/__tests__/server/unit/agentProxyHandler.servertest.ts` | Proxy contract |
+| `web/src/__tests__/server/unit/hubProxyHandler.servertest.ts` | Hub proxy contract |
+| `web/src/__tests__/server/unit/agentRegistry.servertest.ts` | Enabled agents filter |
+| `web/src/__tests__/server/unit/invitedSignup.servertest.ts` | Invite-only sign-up |
+| `.github/workflows/ja-publish-web.yml` | Image build on `ja/*` tags |
+| `web/src/components/layouts/routes.tsx` | **Upstream file:** one import, one `...agentRoutes(...)` line |
+| `web/package.json`, `pnpm-lock.yaml` | **Upstream files:** the `eve` dependency |
 | `web/src/features/auth-credentials/server/signupApiHandler.ts`, `web/src/server/auth.ts` | **Upstream files:** the sign-up-disabled check calls `signupClosedFor(email)` |
 
 ## How it works
@@ -56,13 +56,13 @@ Each agent page has tabs: Chat | Memory | Skills | Proposals | Traces.
   browser sent. It allows only these routes; anything else is 404, a wrong
   method 405:
 
-  | Route                                       | Methods  |
-  | ------------------------------------------- | -------- |
-  | `hub/v1/me`, `hub/v1/agents`                | GET      |
-  | `hub/v1/agents/<id>/(memory\|playbook)`     | GET      |
-  | `hub/v1/agents/<id>/playbook/<n>/retire`    | POST     |
+  | Route | Methods |
+  | --- | --- |
+  | `hub/v1/me`, `hub/v1/agents` | GET |
+  | `hub/v1/agents/<id>/(memory\|playbook)` | GET |
+  | `hub/v1/agents/<id>/playbook/<n>/retire` | POST |
   | `hub/v1/memory/<key>` (one encoded segment) | GET, PUT |
-  | `hub/v1/proposals/<n>/decision`             | POST     |
+  | `hub/v1/proposals/<n>/decision` | POST |
 
 - hr decides who may write (OWNER or ADMIN plus a `PLATFORM_OWNERS` entry);
   the pages show the write controls only when `hub/v1/me` says `owner`.
@@ -75,12 +75,12 @@ Each agent page has tabs: Chat | Memory | Skills | Proposals | Traces.
 
 ## Configuration (langfuse-web only)
 
-| Variable              | Example                                                                                                               |
-| --------------------- | --------------------------------------------------------------------------------------------------------------------- |
-| `JUST_AGENTS`         | `[{"id":"foreman","label":"Foreman","url":"http://agent-foreman:4274"}]`                                              |
-| `WEB_CHAT_TOKEN`      | the same value every agent has                                                                                        |
-| `HUB_URL`             | `http://agent-hr:4274` (hr)                                                                                           |
-| `HUB_TOKEN`           | the same value hr has                                                                                                 |
+| Variable | Example |
+| --- | --- |
+| `JUST_AGENTS` | `[{"id":"foreman","label":"Foreman","url":"http://agent-foreman:4274"}]` |
+| `WEB_CHAT_TOKEN` | the same value every agent has |
+| `HUB_URL` | `http://agent-hr:4274` (hr) |
+| `HUB_TOKEN` | the same value hr has |
 | `JUST_AGENTS_ENABLED` | `foreman,surveyor`: the ids this deployment runs (just-agents passes its `COMPOSE_PROFILES`); unset lists every entry |
 
 `id` must equal the id the agent passes to agent-lib's `langfuse(...)`.
