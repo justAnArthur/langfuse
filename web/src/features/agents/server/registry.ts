@@ -51,3 +51,8 @@ export const findAgent = (id: string): AgentEntry | undefined =>
 
 /** Shared with every agent; the proxy is its only holder on this side. */
 export const webChatToken = (): string => process.env.WEB_CHAT_TOKEN ?? "";
+
+/** hr's hub API (`http://agent-hr:4274`) and the token it trusts the proxy's
+ *  user and role headers behind; either one empty leaves the hub unconfigured. */
+export const hubUrl = (): string => process.env.HUB_URL ?? "";
+export const hubToken = (): string => process.env.HUB_TOKEN ?? "";
