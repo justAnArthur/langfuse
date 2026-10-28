@@ -46,7 +46,12 @@ proposals and health. Everything else is upstream, unchanged.
 
 ## The hub
 
-Each agent page has tabs: Chat | Memory | Skills | Proposals | Traces.
+Each agent page has tabs: Chat | Overview | Memory | Skills | Proposals | Traces.
+
+- Overview shows what the agent is made of, from its own `eve/v1/info`
+  (through the chat proxy): description, model, the static instructions (its
+  system prompt) and dynamic instruction sources, tools, subagents and remote
+  agents, schedules, memory slots and channel routes.
 
 - The data comes from hr's hub API through
   `/api/hub-proxy/<projectId>/hub/v1/...`. The proxy takes the same session

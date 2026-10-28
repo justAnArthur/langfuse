@@ -28,7 +28,7 @@ export default function MemoryDocumentPage() {
   const owner = useIsHubOwner(projectId);
 
   return (
-    <AgentHubPage tab="memory" withPadding>
+    <AgentHubPage tab="memory">
       {hubStatus(doc)}
       {doc.data ? (
         <div className="flex flex-col gap-6">
@@ -47,7 +47,7 @@ export default function MemoryDocumentPage() {
               doc={doc.data}
             />
           ) : (
-            <pre className="bg-muted rounded-md p-3 font-mono text-sm whitespace-pre-wrap">
+            <pre className="bg-muted max-h-[70vh] overflow-auto rounded-md p-3 font-mono text-sm whitespace-pre-wrap">
               {doc.data.body ?? ""}
             </pre>
           )}
@@ -80,7 +80,9 @@ const MemoryEditor = ({
   return (
     <div className="flex flex-col gap-2">
       <Textarea
-        className="min-h-[320px] font-mono"
+        // grows with the text up to 70vh, then scrolls; where field-sizing is
+        // unsupported it stays at the minimum and scrolls
+        className="field-sizing-content max-h-[70vh] min-h-[320px] font-mono"
         value={draft}
         onChange={(event) => setDraft(event.target.value)}
       />

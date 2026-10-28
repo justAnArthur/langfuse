@@ -66,7 +66,26 @@ export type Proposal = {
 };
 export type Playbook = { rules: Rule[]; proposals: Proposal[] };
 
-type Skill = { name: string; description: string; markdown: string };
+// eve 0.83's agent info (`kind: "eve-agent-info"`), only the fields the pages render
+type Named = { name: string; description?: string };
+type DynamicSource = { slug: string; logicalPath: string };
+export type AgentInfo = {
+  agent: Named & { model: { id?: string; reasoning?: string } };
+  instructions: {
+    static: { name: string; role: string; content: string }[];
+    dynamic: DynamicSource[];
+  };
+  tools: {
+    static: (Named & { requiresApproval: boolean })[];
+    dynamic: DynamicSource[];
+  };
+  skills: { static: (Named & { markdown: string })[] };
+  subagents: { local: Named[] };
+  remoteAgents: { entries: Named[] };
+  schedules: { name: string; cron: string; markdown?: string }[];
+  memories: { slot: string; description?: string; visibility: string }[];
+  channels: { routes: { name: string; method: string; urlPath: string }[] };
+};
 
 export class HubError extends Error {
   constructor(
@@ -181,17 +200,22 @@ export const useMemoryDocument = (projectId: string, key: string) =>
     queryFn: () => getJson<MemoryDocument>(memoryUrl(projectId, key)),
   });
 
+// one fetch of the agent's info, shared by the overview and the skills page
+const agentInfoQuery = (projectId: string, agentId: string) => ({
+  ...inline,
+  queryKey: ["just-agents-info", projectId, agentId],
+  enabled: Boolean(projectId && agentId),
+  queryFn: () =>
+    getJson<AgentInfo>(`${agentChatHost(projectId, agentId)}/eve/v1/info`),
+});
+
+export const useAgentInfo = (projectId: string, agentId: string) =>
+  useQuery(agentInfoQuery(projectId, agentId));
+
 export const useSkills = (projectId: string, agentId: string) =>
   useQuery({
-    ...inline,
-    queryKey: ["just-agents-info", projectId, agentId],
-    enabled: Boolean(projectId && agentId),
-    queryFn: async () =>
-      (
-        await getJson<{ skills: { static: Skill[] } }>(
-          `${agentChatHost(projectId, agentId)}/eve/v1/info`,
-        )
-      ).skills.static,
+    ...agentInfoQuery(projectId, agentId),
+    select: (info: AgentInfo) => info.skills.static,
   });
 
 export function useSaveMemory(projectId: string, key: string) {

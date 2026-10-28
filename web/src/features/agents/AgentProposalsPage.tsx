@@ -42,7 +42,7 @@ export default function AgentProposalsPage() {
   );
 
   return (
-    <AgentHubPage tab="proposals" withPadding>
+    <AgentHubPage tab="proposals">
       <div className="flex flex-col gap-4">
         {hubStatus(playbook)}
         <h2 className="font-bold">Pending</h2>

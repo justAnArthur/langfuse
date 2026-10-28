@@ -20,7 +20,7 @@ export default function AgentMemoryPage() {
   const documents = useMemoryList(projectId, agentId);
 
   return (
-    <AgentHubPage tab="memory" withPadding>
+    <AgentHubPage tab="memory">
       {hubStatus(documents, "No memory documents yet.")}
       {documents.data?.length ? (
         <Table>

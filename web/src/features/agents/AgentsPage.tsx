@@ -25,6 +25,7 @@ export default function AgentsPage() {
         },
       }}
       withPadding
+      scrollable
     >
       {agents.error ? (
         <p className="text-destructive text-sm">{agents.error.message}</p>
