@@ -2,6 +2,7 @@ import { getServerAuthSessionForRequest } from "@/src/server/auth";
 import { isProjectMemberOrAdmin } from "@/src/server/utils/checkProjectMembershipOrAdmin";
 import { hasProjectAccess } from "@/src/features/rbac";
 import { ForbiddenError, UnauthorizedError } from "@langfuse/shared";
+import { type Role } from "@langfuse/shared/src/db";
 
 /**
  * Chatting with an agent runs it with real tools, so it takes the same right as
@@ -10,7 +11,7 @@ import { ForbiddenError, UnauthorizedError } from "@langfuse/shared";
 export const authorizeAgentChatOrThrow = async (
   projectId: string,
   request: Request,
-): Promise<{ email: string }> => {
+): Promise<{ email: string; role: Role }> => {
   const session = await getServerAuthSessionForRequest(request);
   if (!session?.user) throw new UnauthorizedError("Unauthenticated");
 
@@ -23,5 +24,10 @@ export const authorizeAgentChatOrThrow = async (
   // The agents record this as the conversation's user; an id would mean nothing there.
   const email = session.user.email;
   if (!email) throw new ForbiddenError("A user without an email cannot chat.");
-  return { email };
+
+  // hr's hub grants writes on this role; a global admin outside the project acts as ADMIN.
+  const projectRole = session.user.organizations
+    .flatMap((org) => org.projects)
+    .find((project) => project.id === projectId)?.role;
+  return { email, role: projectRole ?? "ADMIN" };
 };

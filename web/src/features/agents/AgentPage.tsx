@@ -1,11 +1,10 @@
 import { useRouter } from "next/router";
 import { useState } from "react";
-import Page from "@/src/components/layouts/page";
 import { Button } from "@/src/components/design-system/Button/Button";
 import { agentPageUrl } from "./agentPaths";
 import { AgentChat } from "./components/AgentChat";
+import { AgentHubPage } from "./components/AgentHubPage";
 import { AgentHistory } from "./components/AgentHistory";
-import { useAgents } from "./useAgents";
 
 /**
  * One page for a new chat (`/agents/<id>`) and a past one (`/agents/<id>/<session>`).
@@ -17,8 +16,6 @@ export default function AgentPage() {
   const projectId = router.query.projectId as string;
   const agentId = router.query.agentId as string;
   const sessionId = router.query.sessionId as string | undefined;
-  const agents = useAgents(projectId);
-  const label = agents.data?.find((agent) => agent.id === agentId)?.label;
 
   const [startedHere, setStartedHere] = useState<string>();
   const [freshChats, setFreshChats] = useState(0);
@@ -38,11 +35,10 @@ export default function AgentPage() {
   };
 
   return (
-    <Page
-      headerProps={{
-        title: label ?? agentId ?? "Agent",
-        breadcrumb: [{ name: "Agents", href: `/project/${projectId}/agents` }],
-        actionButtonsRight: sessionId ? (
+    <AgentHubPage
+      tab="chat"
+      actions={
+        sessionId ? (
           <>
             <Button
               text="Open trace"
@@ -51,8 +47,8 @@ export default function AgentPage() {
             />
             <Button text="New chat" onClick={onNewChat} />
           </>
-        ) : null,
-      }}
+        ) : null
+      }
     >
       <div className="flex h-full min-h-0">
         <aside className="hidden w-72 shrink-0 overflow-y-auto border-r md:block">
@@ -77,6 +73,6 @@ export default function AgentPage() {
           ) : null}
         </section>
       </div>
-    </Page>
+    </AgentHubPage>
   );
 }
