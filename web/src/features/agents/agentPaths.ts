@@ -47,6 +47,9 @@ export const agentSkillsUrl = (projectId: string, agentId: string) =>
 export const agentProposalsUrl = (projectId: string, agentId: string) =>
   `/project/${projectId}/agents/${agentId}/proposals`;
 
+export const productsUrl = (projectId: string, product?: string) =>
+  `/project/${projectId}/agents/products${product ? `/${encodeURIComponent(product)}` : ""}`;
+
 /** `route` is hr's path after `hub/v1/`, its segments already encoded. */
 export const hubApiUrl = (projectId: string, route: string) =>
   `/api/hub-proxy/${encodeURIComponent(projectId)}/hub/v1/${route}`;

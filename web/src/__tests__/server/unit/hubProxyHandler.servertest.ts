@@ -100,6 +100,8 @@ describe("hub proxy", () => {
     ["PUT", ["hub", "v1", "memory", "foreman/notes"]],
     ["POST", ["hub", "v1", "proposals", "7", "decision"]],
     ["POST", ["hub", "v1", "agents", "foreman", "playbook", "3", "retire"]],
+    ["PUT", ["hub", "v1", "products", "camasys", "documents", "brief-seo"]],
+    ["POST", ["hub", "v1", "experiments", "12", "decision"]],
   ])("forwards the body of a %s", async (method, path) => {
     signedIn("OWNER");
     const hub = stubHub();
@@ -143,12 +145,30 @@ describe("hub proxy", () => {
       ["hub", "v1", "agents", "../x", "memory"],
     ],
     ["a parent segment as a key", ["hub", "v1", "memory", ".."]],
+    [
+      "a product slot the pages never ask for",
+      ["hub", "v1", "products", "camasys", "documents", "notes", "revisions"],
+    ],
+    ["a product id outside the slug form", ["hub", "v1", "products", "../x"]],
     ["the agent's own api", ["eve", "v1", "session"]],
   ])("refuses %s", async (_, path) => {
     signedIn("OWNER");
     const hub = stubHub();
 
     const res = await call(path);
+
+    expect(res.status).toBe(404);
+    expect(hub).not.toHaveBeenCalled();
+  });
+
+  it("lets the weekly review be read with the product, never written", async () => {
+    signedIn("OWNER");
+    const hub = stubHub();
+
+    const res = await call(
+      ["hub", "v1", "products", "camasys", "documents", "weekly-review"],
+      { method: "PUT", body: "{}" },
+    );
 
     expect(res.status).toBe(404);
     expect(hub).not.toHaveBeenCalled();

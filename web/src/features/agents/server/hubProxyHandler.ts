@@ -7,6 +7,9 @@ import { hubToken, hubUrl } from "./registry";
 const AGENT = "[a-z0-9][a-z0-9_-]*";
 // one encoded segment, never `.` or `..`, which fetch would resolve to a parent route
 const KEY = "(?!\\.\\.?$)[^/]+";
+const PRODUCT = "[a-z0-9-]+";
+// weekly-review is read on the product page, never written or diffed there
+const EDITABLE_SLOT = `(goal|brief-${AGENT})`;
 
 /** The hub routes the pages use, each with its methods. Everything else hr serves stays unreachable. */
 const ROUTES: { pattern: RegExp; methods: string[] }[] = [
@@ -21,6 +24,20 @@ const ROUTES: { pattern: RegExp; methods: string[] }[] = [
   },
   { pattern: new RegExp(`^hub/v1/memory/${KEY}$`), methods: ["GET", "PUT"] },
   { pattern: /^hub\/v1\/proposals\/\d+\/decision$/, methods: ["POST"] },
+  { pattern: new RegExp(`^hub/v1/products(/${PRODUCT})?$`), methods: ["GET"] },
+  {
+    pattern: new RegExp(
+      `^hub/v1/products/${PRODUCT}/documents/${EDITABLE_SLOT}$`,
+    ),
+    methods: ["PUT"],
+  },
+  {
+    pattern: new RegExp(
+      `^hub/v1/products/${PRODUCT}/documents/${EDITABLE_SLOT}/revisions$`,
+    ),
+    methods: ["GET"],
+  },
+  { pattern: /^hub\/v1\/experiments\/\d+\/decision$/, methods: ["POST"] },
 ];
 
 const HUB_TIMEOUT_MS = 15_000;

@@ -68,9 +68,19 @@ Each agent page has tabs: Chat | Overview | Memory | Skills | Proposals | Traces
   | `hub/v1/agents/<id>/playbook/<n>/retire` | POST |
   | `hub/v1/memory/<key>` (one encoded segment) | GET, PUT |
   | `hub/v1/proposals/<n>/decision` | POST |
+  | `hub/v1/products`, `hub/v1/products/<product>` | GET |
+  | `hub/v1/products/<product>/documents/(goal\|brief-<agent>)` | PUT |
+  | `hub/v1/products/<product>/documents/(goal\|brief-<agent>)/revisions` | GET |
+  | `hub/v1/experiments/<n>/decision` | POST |
 
 - hr decides who may write (OWNER or ADMIN plus a `PLATFORM_OWNERS` entry);
   the pages show the write controls only when `hub/v1/me` says `owner`.
+- Products (a button on the Agents page, `/agents/products`) lists each
+  product with its documents and experiment counts. A product page shows the
+  goal and one brief per channel agent (editable by an owner, with history),
+  the weekly review read-only, and the experiment log, where an owner records
+  the verdict and result of an open experiment. An agent with the id
+  `products` would be shadowed by that page.
 - Skills read the skill text from the agent's own `eve/v1/info` (through the
   chat proxy) and the playbook rules from the hub.
 - Traces opens Langfuse's traces table filtered on the tag every agent puts

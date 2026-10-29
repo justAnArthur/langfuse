@@ -66,6 +66,42 @@ export type Proposal = {
 };
 export type Playbook = { rules: Rule[]; proposals: Proposal[] };
 
+export type ProductSummary = {
+  product: string;
+  documents: { slot: string; size: number; updated_at: string }[];
+  experiments: { open: number; decided: number };
+};
+export type ProductDocument = {
+  slot: string;
+  body: string;
+  version: string;
+  updated_at: string;
+  updated_by: string | null;
+};
+export const VERDICTS = ["keep", "iterate", "revert", "noise"] as const;
+export type Verdict = (typeof VERDICTS)[number];
+export type Experiment = {
+  id: number;
+  agent: string;
+  hypothesis: string;
+  change: string;
+  metric: string;
+  baseline: string;
+  started_on: string;
+  verdict_due: string;
+  verdict: Verdict | null;
+  result: string | null;
+  decided_on: string | null;
+};
+export type Product = {
+  product: string;
+  documents: ProductDocument[];
+  experiments: Experiment[];
+};
+
+/** What an editor sends: the new body and the version it was based on (null for a new document). */
+export type DocumentWrite = { body: string; version: string | null };
+
 // eve 0.83's agent info (`kind: "eve-agent-info"`), only the fields the pages render
 type Named = { name: string; description?: string };
 type DynamicSource = { slug: string; logicalPath: string };
@@ -222,10 +258,10 @@ export function useSaveMemory(projectId: string, key: string) {
   const queryClient = useQueryClient();
   return useMutation({
     onError: ownError,
-    mutationFn: (write: { content: string; expectedVersion: string | null }) =>
+    mutationFn: ({ body, version }: DocumentWrite) =>
       getJson<{ version: string }>(
         memoryUrl(projectId, key),
-        send("PUT", write),
+        send("PUT", { content: body, expectedVersion: version }),
       ),
     onSuccess: () =>
       queryClient.invalidateQueries({ queryKey: hubKey(projectId) }),
@@ -261,6 +297,84 @@ export function useRetireRule(projectId: string, agentId: string) {
       getJson(
         hubApiUrl(projectId, `agents/${agentId}/playbook/${id}/retire`),
         send("POST", { why }),
+      ),
+    onSettled: () =>
+      queryClient.invalidateQueries({ queryKey: hubKey(projectId) }),
+  });
+}
+
+const productUrl = (projectId: string, product: string) =>
+  hubApiUrl(projectId, `products/${encodeURIComponent(product)}`);
+
+const productDocumentUrl = (projectId: string, product: string, slot: string) =>
+  `${productUrl(projectId, product)}/documents/${encodeURIComponent(slot)}`;
+
+export const useProducts = (projectId: string) =>
+  useQuery({
+    ...inline,
+    queryKey: hubKey(projectId, "products"),
+    enabled: Boolean(projectId),
+    queryFn: () => getJson<ProductSummary[]>(hubApiUrl(projectId, "products")),
+  });
+
+export const useProduct = (projectId: string, product: string) =>
+  useQuery({
+    ...inline,
+    queryKey: hubKey(projectId, "product", product),
+    // an owner may be mid-edit; each editor keeps its base version either way
+    refetchOnWindowFocus: false,
+    enabled: Boolean(projectId && product),
+    queryFn: () => getJson<Product>(productUrl(projectId, product)),
+  });
+
+export const useProductRevisions = (
+  projectId: string,
+  product: string,
+  slot: string,
+) =>
+  useQuery({
+    ...inline,
+    queryKey: hubKey(projectId, "product", product, "revisions", slot),
+    enabled: Boolean(projectId && product && slot),
+    queryFn: () =>
+      getJson<Revision[]>(
+        `${productDocumentUrl(projectId, product, slot)}/revisions`,
+      ),
+  });
+
+export function useSaveProductDocument(
+  projectId: string,
+  product: string,
+  slot: string,
+) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    onError: ownError,
+    mutationFn: (write: DocumentWrite) =>
+      getJson<{ version: string }>(
+        productDocumentUrl(projectId, product, slot),
+        send("PUT", write),
+      ),
+    onSuccess: () =>
+      queryClient.invalidateQueries({ queryKey: hubKey(projectId) }),
+  });
+}
+
+export function useDecideExperiment(projectId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    onError: ownError,
+    mutationFn: ({
+      id,
+      ...decision
+    }: {
+      id: number;
+      verdict: Verdict;
+      result: string;
+    }) =>
+      getJson(
+        hubApiUrl(projectId, `experiments/${id}/decision`),
+        send("POST", decision),
       ),
     onSettled: () =>
       queryClient.invalidateQueries({ queryKey: hubKey(projectId) }),

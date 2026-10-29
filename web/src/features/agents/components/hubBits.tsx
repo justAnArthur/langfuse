@@ -29,6 +29,12 @@ export const ScopeLabel = ({ doc }: { doc: MemoryInfo }) => {
   );
 };
 
+export const DocumentBody = ({ body }: { body: string | null }) => (
+  <pre className="bg-muted max-h-[70vh] overflow-auto rounded-md p-3 font-mono text-sm whitespace-pre-wrap">
+    {body ?? ""}
+  </pre>
+);
+
 export const RuleFields = ({ rule }: { rule: NewRule }) => (
   <div className="flex flex-col gap-1 text-sm">
     <p>{rule.rule}</p>
