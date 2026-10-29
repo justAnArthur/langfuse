@@ -1,8 +1,9 @@
 import Link from "next/link";
 import { useRouter } from "next/router";
+import { Button } from "@/src/components/design-system/Button/Button";
 import Page from "@/src/components/layouts/page";
 import { Badge } from "@/src/components/ui/badge";
-import { agentPageUrl } from "./agentPaths";
+import { agentPageUrl, productsUrl } from "./agentPaths";
 import { useAgents } from "./useAgents";
 import { useHubAgents, usePendingCounts } from "./useHub";
 
@@ -23,6 +24,13 @@ export default function AgentsPage() {
           description:
             "Chat with the just-agents deployments. Each conversation is traced here as a session.",
         },
+        actionButtonsRight: (
+          <Button
+            text="Products"
+            variant="secondary"
+            href={productsUrl(projectId)}
+          />
+        ),
       }}
       withPadding
       scrollable
