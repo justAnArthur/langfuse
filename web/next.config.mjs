@@ -151,6 +151,8 @@ const nextConfig = {
     browserToTerminal: true,
   },
   experimental: {
+    // persistent dev cache writes GBs to .next/dev/cache; keep off
+    turbopackFileSystemCacheForDev: false,
     // Ephemeral CI builds can skip writing compiler state they never restore.
     ...(process.env.NEXT_DISABLE_BUILD_CACHE === "true"
       ? { turbopackFileSystemCacheForBuild: false }
